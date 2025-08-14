@@ -4822,8 +4822,7 @@ run(function()
 	})
 end)
 	
-run(function()
-	local Scaffold
+local Scaffold
 local Expand
 local Tower
 local Downwards
@@ -5130,7 +5129,6 @@ run(function()
 	})
 end)
 
-	
 run(function()
 	local ShopTierBypass
 	local tiered, nexttier = {}, {}
