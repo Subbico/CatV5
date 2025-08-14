@@ -7,9 +7,9 @@ local gethui = gethui or function() return game:GetService('Players').LocalPlaye
 local httpService = cloneref(game:GetService('HttpService'))
 
 local success, commitdata = pcall(function()
-    local commitinfo = httpService:JSONDecode(game:HttpGet('https://api.github.com/repos/new-qwertyui/CatV5/commits'))[1]
+    local commitinfo = httpService:JSONDecode(game:HttpGet('https://api.github.com/repos/Subbico/CatV5/commits'))[1]
     if commitinfo and type(commitinfo) == 'table' then
-        local fullinfo = httpService:JSONDecode(game:HttpGet('https://api.github.com/repos/new-qwertyui/CatV5/commits/'.. commitinfo.sha))
+        local fullinfo = httpService:JSONDecode(game:HttpGet('https://api.github.com/repos/Subbico/CatV5/commits/'.. commitinfo.sha))
         fullinfo.hash = commitinfo.sha:sub(1, 7)
         return fullinfo
     end
@@ -44,7 +44,7 @@ end
 local function downloadFile(path: string) : string
 	if not developer or not isfile(`newcatvape/{path}`) then
         local suc, res = pcall(function()
-            return game:HttpGet('https://raw.githubusercontent.com/new-qwertyui/CatV5/'..commitdata.sha..'/'..path:gsub('newcatvape/', ''):gsub(' ', '%%20'), true)
+            return game:HttpGet('https://raw.githubusercontent.com/Subbico/CatV5/'..commitdata.sha..'/'..path:gsub('newcatvape/', ''):gsub(' ', '%%20'), true)
         end)
         if (not suc or res == '404: Not Found') then
             return 
@@ -73,7 +73,7 @@ local function yield(path: string) : ()
     if gitisfolder(path) then
         makefolder(`newcatvape/{path}`)
         local contents = request({
-            Url = `https://api.github.com/repos/new-qwertyui/CatV5/contents/{path}`,
+            Url = `https://api.github.com/repos/Subbico/CatV5/contents/{path}`,
             Method = 'GET'
         }) :: {Body: string, StatusCode: number}
         for _, v: table in httpService:JSONDecode(contents.Body) do
@@ -88,7 +88,7 @@ if not developer and commitdata.sha ~= 'main' then
     if not isfolder('newcatvape') or #listfiles('newcatvape') <= 6 or not isfolder('newcatvape/profiles') or not isfile('newcatvape/profiles/commit.txt') or readfile('newcatvape/profiles/commit.txt') ~= commitdata.sha or not isfile('newcatvapereset') then
         makefolder('newcatvape')
         local contents = request({
-            Url = `https://api.github.com/repos/new-qwertyui/CatV5/contents`,
+            Url = `https://api.github.com/repos/Subbico/CatV5/contents`,
             Method = 'GET'
         }) :: {Body: string, StatusCode: number}
         for _, v: table in httpService:JSONDecode(contents.Body) do
