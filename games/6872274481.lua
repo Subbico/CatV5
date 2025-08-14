@@ -4901,12 +4901,6 @@ local function getScaffoldBlock()
     end
     return nil, 0
 end
-local function isValidBuildPosition(pos)
-    -- Implement logic to check if 'pos' is a valid position to build
-    local blockBelow = getPlacedBlock(pos - Vector3.new(0, 3, 0))
-    return blockBelow ~= nil -- Ensure there's a block below to build on
-end
-
 Scaffold = vape.Categories.Utility:CreateModule({
     Name = 'Scaffold',
     Function = function(callback)
@@ -4929,9 +4923,8 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                 local root = entitylib.character.RootPart
                                 if root then
                                     local wool = getScaffoldBlock()
-                                    -- Only apply velocity if we have blocks or LimitItem is off and player is grounded
-                                    local isGrounded = true -- You need to implement or determine if the player is grounded
-                                    if (wool or not LimitItem.Enabled) and isGrounded and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
+                                    -- Only apply velocity if we have blocks or LimitItem is off
+                                    if (wool or not LimitItem.Enabled) and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
                                         root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
                                     end
 
@@ -4945,7 +4938,7 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                             local block, blockpos = getPlacedBlock(roundedPos)
                                             if not block then
                                                 blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(pos)
-                                                if blockpos and isValidBuildPosition(blockpos) then
+                                                if blockpos then
                                                     task.spawn(bedwars.placeBlock, blockpos, wool, false)
                                                     lastPlace = currentTime
                                                     lastBlockPos = roundedPos
@@ -5014,7 +5007,7 @@ Scaffold = vape.Categories.Utility:CreateModule({
                         local moveDir = entitylib.character.Humanoid.MoveDirection
                         local hipHeight = entitylib.character.HipHeight
                         local downOffset = Downwards.Enabled and inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 4.5 or 1.5
-                        local basePos = root.Position - Vector3.new(0, hipHeight + downOffset + 2, 0) -- Adjusted to target legs
+                        local basePos = root.Position - Vector3.new(0, hipHeight + downOffset, 0)
                         for i = Expand.Value, 1, -1 do
                             local currentpos = roundPos(basePos + moveDir * (i * 3))
 
@@ -5031,7 +5024,7 @@ Scaffold = vape.Categories.Utility:CreateModule({
                             local block, blockpos = getPlacedBlock(currentpos)
                             if not block then
                                 blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(currentpos)
-                                if blockpos and isValidBuildPosition(blockpos) then
+                                if blockpos then
                                     task.spawn(bedwars.placeBlock, blockpos, wool, false)
                                 end
                             end
@@ -5096,6 +5089,38 @@ TowerCPS = Scaffold:CreateTwoSlider({
     DefaultMax = 20,
     Darker = true
 })
+
+run(function()
+	local ShopTierBypass
+	local tiered, nexttier = {}, {}
+	
+	ShopTierBypass = vape.Categories.Utility:CreateModule({
+		Name = 'ShopTierBypass',
+		Function = function(callback)
+			if callback then
+				repeat task.wait() until store.shopLoaded or not ShopTierBypass.Enabled
+				if ShopTierBypass.Enabled then
+					for _, v in bedwars.Shop.ShopItems do
+						tiered[v] = v.tiered
+						nexttier[v] = v.nextTier
+						v.nextTier = nil
+						v.tiered = nil
+					end
+				end
+			else
+				for i, v in tiered do
+					i.tiered = v
+				end
+				for i, v in nexttier do
+					i.nextTier = v
+				end
+				table.clear(nexttier)
+				table.clear(tiered)
+			end
+		end,
+		Tooltip = 'Lets you buy things like armor early.'
+	})
+end)
 
 run(function()
 	local ShopTierBypass
