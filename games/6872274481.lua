@@ -4202,20 +4202,6 @@ local function getScaffoldBlock()
     return nil, 0
 end
 
--- Function to place a column of blocks below the player for better tower support
-local function placeTowerColumn(basePos, wool, height)
-    for i = 1, height do
-        local blockPos = basePos - Vector3.new(0, i * 3, 0)
-        local roundedPos = roundPos(blockPos)
-        if not getPlacedBlock(roundedPos) then
-            local placePos = checkAdjacent(roundedPos) and roundedPos or blockProximity(blockPos)
-            if placePos then
-                task.spawn(bedwars.placeBlock, placePos, wool, false)
-            end
-        end
-    end
-end
-
 Scaffold = vape.Categories.Utility:CreateModule({
     Name = 'Scaffold',
     Function = function(callback)
@@ -4241,7 +4227,7 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                     local wool = getScaffoldBlock()
                                     -- Only apply velocity if we have blocks or LimitItem is off
                                     if (wool or not LimitItem.Enabled) and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
-                                        root.Velocity = Vector3.new(root.Velocity.X, 25, root.Velocity.Z)  -- Reduced velocity to prevent floating
+                                        root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
                                     end
                                     
                                     -- Place blocks if we have them
@@ -4251,9 +4237,15 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                         
                                         -- Only do proximity check if position changed
                                         if lastBlockPos ~= roundedPos then
-                                            placeTowerColumn(pos, wool, 3)  -- Place a column of 3 blocks for better support
-                                            lastPlace = currentTime
-                                            lastBlockPos = roundedPos
+                                            local block, blockpos = getPlacedBlock(roundedPos)
+                                            if not block then
+                                                blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(pos)
+                                                if blockpos then
+                                                    task.spawn(bedwars.placeBlock, blockpos, wool, false)
+                                                    lastPlace = currentTime
+                                                    lastBlockPos = roundedPos
+                                                end
+                                            end
                                         end
                                     end
                                 end
@@ -4412,38 +4404,6 @@ TowerCPS = Scaffold:CreateTwoSlider({
     DefaultMax = 20,
     Darker = true
 })
-	
-run(function()
-	local ShopTierBypass
-	local tiered, nexttier = {}, {}
-	
-	ShopTierBypass = vape.Categories.Utility:CreateModule({
-		Name = 'Shop Tier Bypass',
-		Function = function(callback)
-			if callback then
-				repeat task.wait() until store.shopLoaded or not ShopTierBypass.Enabled
-				if ShopTierBypass.Enabled then
-					for _, v in bedwars.Shop.ShopItems do
-						tiered[v] = v.tiered
-						nexttier[v] = v.nextTier
-						v.nextTier = nil
-						v.tiered = nil
-					end
-				end
-			else
-				for i, v in tiered do
-					i.tiered = v
-				end
-				for i, v in nexttier do
-					i.nextTier = v
-				end
-				table.clear(nexttier)
-				table.clear(tiered)
-			end
-		end,
-		Tooltip = 'Lets you buy things like armor early.'
-	})
-end)
 	
 run(function()
 	local StaffDetector
