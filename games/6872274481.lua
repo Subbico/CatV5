@@ -4202,6 +4202,20 @@ local function getScaffoldBlock()
     return nil, 0
 end
 
+-- Function to place a column of blocks below the player for better tower support
+local function placeTowerColumn(basePos, wool, height)
+    for i = 1, height do
+        local blockPos = basePos - Vector3.new(0, i * 3, 0)
+        local roundedPos = roundPos(blockPos)
+        if not getPlacedBlock(roundedPos) then
+            local placePos = checkAdjacent(roundedPos) and roundedPos or blockProximity(blockPos)
+            if placePos then
+                task.spawn(bedwars.placeBlock, placePos, wool, false)
+            end
+        end
+    end
+end
+
 Scaffold = vape.Categories.Utility:CreateModule({
     Name = 'Scaffold',
     Function = function(callback)
@@ -4212,46 +4226,24 @@ Scaffold = vape.Categories.Utility:CreateModule({
         if callback then
             local towerThread
             
-            -- Fast tower building with CPS
+            -- Tower building by placing blocks rapidly below player
             local function startTowerBuild()
                 if towerThread then return end
                 towerThread = task.spawn(function()
-                    local lastBlockPos = nil
-                    while Scaffold.Enabled and Tower.Enabled and (inputService:IsKeyDown(Enum.KeyCode.Space) or 
+                    while Scaffold.Enabled and Tower.Enabled and (inputService:IsKeyDown(Enum.KeyCode.Space) or
                         (inputService.TouchEnabled and lplr.PlayerGui.TouchGui.TouchControlFrame.JumpButton.ImageTransparency < 1)) do
-                        local currentTime = tick()
-                        if currentTime - lastPlace >= (1 / TowerCPS.GetRandomValue()) then
-                            if entitylib.isAlive then
-                                local root = entitylib.character.RootPart
-                                if root then
-                                    local wool = getScaffoldBlock()
-                                    -- Only apply velocity if we have blocks or LimitItem is off
-                                    if (wool or not LimitItem.Enabled) and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
-                                        root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
-                                    end
-                                    
-                                    -- Place blocks if we have them
-                                    if wool and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
-                                        local pos = root.Position - Vector3.new(0, entitylib.character.HipHeight + 1.5, 0)
-                                        local roundedPos = roundPos(pos)
-                                        
-                                        -- Only do proximity check if position changed
-                                        if lastBlockPos ~= roundedPos then
-                                            local block, blockpos = getPlacedBlock(roundedPos)
-                                            if not block then
-                                                blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(pos)
-                                                if blockpos then
-                                                    task.spawn(bedwars.placeBlock, blockpos, wool, false)
-                                                    lastPlace = currentTime
-                                                    lastBlockPos = roundedPos
-                                                end
-                                            end
-                                        end
-                                    end
+                        if entitylib.isAlive then
+                            local root = entitylib.character.RootPart
+                            if root then
+                                local wool = getScaffoldBlock()
+                                -- Place blocks if we have them
+                                if wool and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
+                                    local pos = root.Position - Vector3.new(0, entitylib.character.HipHeight + 1.5, 0)
+                                    placeTowerColumn(pos, wool, 10)  -- Place a tall column of 10 blocks for rapid tower building
                                 end
                             end
                         end
-                        task.wait(0.01)
+                        task.wait(0.01)  -- Rapid placement
                     end
                     towerThread = nil
                 end)
