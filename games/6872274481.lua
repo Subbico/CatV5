@@ -4202,16 +4202,14 @@ local function getScaffoldBlock()
     return nil, 0
 end
 
--- Function to place a column of blocks below the player for better tower support
-local function placeTowerColumn(basePos, wool, height)
-    for i = 1, height do
-        local blockPos = basePos - Vector3.new(0, i * 3, 0)
-        local roundedPos = roundPos(blockPos)
-        if not getPlacedBlock(roundedPos) then
-            local placePos = checkAdjacent(roundedPos) and roundedPos or blockProximity(blockPos)
-            if placePos then
-                task.spawn(bedwars.placeBlock, placePos, wool, false)
-            end
+-- Function to place blocks rapidly below the player
+local function placeTowerBlocks(basePos, wool)
+    local blockPos = basePos
+    local roundedPos = roundPos(blockPos)
+    if not getPlacedBlock(roundedPos) then
+        local placePos = blockProximity(blockPos)  -- Find nearest placeable spot
+        if placePos then
+            task.spawn(bedwars.placeBlock, placePos, wool, false)
         end
     end
 end
@@ -4239,11 +4237,11 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                 -- Place blocks if we have them
                                 if wool and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
                                     local pos = root.Position - Vector3.new(0, entitylib.character.HipHeight + 1.5, 0)
-                                    placeTowerColumn(pos, wool, 10)  -- Place a tall column of 10 blocks for rapid tower building
+                                    placeTowerBlocks(pos, wool)  -- Place block at nearest spot below
                                 end
                             end
                         end
-                        task.wait(0.01)  -- Rapid placement
+                        task.wait(0.005)  -- Faster placement
                     end
                     towerThread = nil
                 end)
