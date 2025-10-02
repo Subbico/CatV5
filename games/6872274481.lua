@@ -4124,6 +4124,7 @@ run(function()
 	local Diagonal
 	local LimitItem
 	local Mouse
+	local TowerLayers
 	local adjacent, lastpos, label = {}, Vector3.zero
 	
 	for x = -3, 3, 3 do
@@ -4222,39 +4223,54 @@ run(function()
 	
 						if wool then
 							local root = entitylib.character.RootPart
+							local moveDir = entitylib.character.Humanoid.MoveDirection
+							local downOffset = Downwards.Enabled and inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 4.5 or 1.5
+							local isTowerActive = Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space)
+							local basePos = root.Position - Vector3.new(0, entitylib.character.HipHeight + downOffset - (isTowerActive and 1.5 or 0), 0)
+							
 							if Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space) and (not inputService:GetFocusedTextBox()) then
 								root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
 							end
 	
-							local isTowerActive = Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space)
-							local layers = isTowerActive and Expand.Value or 1  -- Use expand for vertical layers in tower mode
-	
-							for layer = 0, (layers - 1) * 3, 3 do
-								local basePos = root.Position - Vector3.new(0, entitylib.character.HipHeight + (Downwards.Enabled and inputService:IsKeyDown(Enum.KeyCode.LeftShift) and 4.5 or 1.5) - (isTowerActive and 1.5 or 0), 0)  -- Slight upward offset for tower anticipation
-								local currentpos = roundPos(basePos + Vector3.new(0, layer, 0))
-								
-								if Diagonal.Enabled and not isTowerActive then  -- Skip diagonal logic for tower to focus on vertical
-									if math.abs(math.round(math.deg(math.atan2(-entitylib.character.Humanoid.MoveDirection.X, -entitylib.character.Humanoid.MoveDirection.Z)) / 45) * 45) % 90 == 45 then
-										local dt = (lastpos - currentpos)
-										if ((dt.X == 0 and dt.Z ~= 0) or (dt.X ~= 0 and dt.Z == 0)) and ((lastpos - root.Position) * Vector3.new(1, 0, 1)).Magnitude < 2.5 then
-											currentpos = lastpos
+							if isTowerActive then
+								-- Tower mode: vertical stacking
+								for layer = 0, (TowerLayers.Value - 1) * 3, 3 do
+									local currentpos = roundPos(basePos + Vector3.new(0, layer, 0))
+									local block, blockpos = getPlacedBlock(currentpos)
+									if not block then
+										blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(currentpos)
+										if blockpos then
+											task.spawn(bedwars.placeBlock, blockpos, wool, false)
 										end
 									end
 								end
-	
-								local block, blockpos = getPlacedBlock(currentpos)
-								if not block then
-									blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(currentpos)
-									if blockpos then
-										task.spawn(bedwars.placeBlock, blockpos, wool, false)
+							else
+								-- Scaffold mode: horizontal expansion
+								for i = Expand.Value, 1, -1 do
+									local currentpos = roundPos(basePos + moveDir * (i * 3))
+									if Diagonal.Enabled then
+										if math.abs(math.round(math.deg(math.atan2(-moveDir.X, -moveDir.Z)) / 45) * 45) % 90 == 45 then
+											local dt = (lastpos - currentpos)
+											if ((dt.X == 0 and dt.Z ~= 0) or (dt.X ~= 0 and dt.Z == 0)) and ((lastpos - root.Position) * Vector3.new(1, 0, 1)).Magnitude < 2.5 then
+												currentpos = lastpos
+											end
+										end
 									end
+	
+									local block, blockpos = getPlacedBlock(currentpos)
+									if not block then
+										blockpos = checkAdjacent(blockpos * 3) and blockpos * 3 or blockProximity(currentpos)
+										if blockpos then
+											task.spawn(bedwars.placeBlock, blockpos, wool, false)
+										end
+									end
+									lastpos = currentpos
 								end
 							end
-							lastpos = currentpos  -- Update lastpos with the top layer
 						end
 					end
 	
-					local waitTime = (Tower.Enabled and inputService:IsKeyDown(Enum.KeyCode.Space)) and 0.01 or 0.03
+					local waitTime = isTowerActive and 0.01 or 0.03
 					task.wait(waitTime)
 				until not Scaffold.Enabled
 			else
@@ -4282,6 +4298,11 @@ run(function()
 	})
 	LimitItem = Scaffold:CreateToggle({Name = 'Limit to items'})
 	Mouse = Scaffold:CreateToggle({Name = 'Require mouse down'})
+	TowerLayers = Scaffold:CreateSlider({
+		Name = 'Tower Layers',
+		Min = 1,
+		Max = 6
+	})
 	Scaffold:CreateToggle({
 		Name = 'Block Count',
 		Function = function(callback)
@@ -4316,6 +4337,7 @@ run(function()
 		end
 	})
 end)
+
 	
 run(function()
 	local StaffDetector
