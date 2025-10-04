@@ -4211,15 +4211,8 @@ Scaffold = vape.Categories.Utility:CreateModule({
 
         if callback then
             local humanoid = entitylib.character.Humanoid
-            local jumpAnim, fallAnim
-            pcall(function()
-                if humanoid.JumpAnimation then
-                    jumpAnim = humanoid:LoadAnimation(humanoid.JumpAnimation)
-                end
-                if humanoid.FallAnimation then
-                    fallAnim = humanoid:LoadAnimation(humanoid.FallAnimation)
-                end
-            end)
+            local jumpAnim = humanoid:LoadAnimation(humanoid.JumpAnimation)
+            local fallAnim = humanoid:LoadAnimation(humanoid.FallAnimation)
             
             local towerThread
             
@@ -4241,27 +4234,21 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                         root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
                                         
                                         -- Play animations based on vertical velocity
-                                        pcall(function()
-                                            if root.Velocity.Y > 0 then
-                                                if jumpAnim then
-                                                    if not jumpAnim.IsPlaying then
-                                                        jumpAnim:Play()
-                                                    end
-                                                end
-                                                if fallAnim and fallAnim.IsPlaying then
-                                                    fallAnim:Stop()
-                                                end
-                                            elseif root.Velocity.Y < 0 then
-                                                if fallAnim then
-                                                    if not fallAnim.IsPlaying then
-                                                        fallAnim:Play()
-                                                    end
-                                                end
-                                                if jumpAnim and jumpAnim.IsPlaying then
-                                                    jumpAnim:Stop()
-                                                end
+                                        if root.Velocity.Y > 0 then
+                                            if not jumpAnim.IsPlaying then
+                                                jumpAnim:Play()
                                             end
-                                        end)
+                                            if fallAnim.IsPlaying then
+                                                fallAnim:Stop()
+                                            end
+                                        elseif root.Velocity.Y < 0 then
+                                            if not fallAnim.IsPlaying then
+                                                fallAnim:Play()
+                                            end
+                                            if jumpAnim.IsPlaying then
+                                                jumpAnim:Stop()
+                                            end
+                                        end
                                     end
                                     
                                     -- Place blocks if we have them
@@ -4297,10 +4284,8 @@ Scaffold = vape.Categories.Utility:CreateModule({
                     towerThread = nil
                 end
                 -- Stop animations when tower stops
-                pcall(function()
-                    if jumpAnim then jumpAnim:Stop() end
-                    if fallAnim then fallAnim:Stop() end
-                end)
+                jumpAnim:Stop()
+                fallAnim:Stop()
             end
             
             -- Input handlers for tower
@@ -4443,6 +4428,7 @@ TowerCPS = Scaffold:CreateTwoSlider({
     DefaultMax = 20,
     Darker = true
 })
+
 	
 run(function()
 	local StaffDetector
