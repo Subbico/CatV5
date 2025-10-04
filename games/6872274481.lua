@@ -4215,11 +4215,9 @@ Scaffold = vape.Categories.Utility:CreateModule({
             pcall(function()
                 if humanoid.JumpAnimation then
                     jumpAnim = humanoid:LoadAnimation(humanoid.JumpAnimation)
-                    jumpAnim.Looped = true
                 end
                 if humanoid.FallAnimation then
                     fallAnim = humanoid:LoadAnimation(humanoid.FallAnimation)
-                    fallAnim.Looped = true
                 end
             end)
             
@@ -4245,15 +4243,19 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                         -- Play animations based on vertical velocity
                                         pcall(function()
                                             if root.Velocity.Y > 0 then
-                                                if jumpAnim and not jumpAnim.IsPlaying then
-                                                    jumpAnim:Play()
+                                                if jumpAnim then
+                                                    if not jumpAnim.IsPlaying then
+                                                        jumpAnim:Play()
+                                                    end
                                                 end
                                                 if fallAnim and fallAnim.IsPlaying then
                                                     fallAnim:Stop()
                                                 end
                                             elseif root.Velocity.Y < 0 then
-                                                if fallAnim and not fallAnim.IsPlaying then
-                                                    fallAnim:Play()
+                                                if fallAnim then
+                                                    if not fallAnim.IsPlaying then
+                                                        fallAnim:Play()
+                                                    end
                                                 end
                                                 if jumpAnim and jumpAnim.IsPlaying then
                                                     jumpAnim:Stop()
@@ -4441,7 +4443,6 @@ TowerCPS = Scaffold:CreateTwoSlider({
     DefaultMax = 20,
     Darker = true
 })
-
 	
 run(function()
 	local StaffDetector
