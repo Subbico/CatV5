@@ -4210,10 +4210,6 @@ Scaffold = vape.Categories.Utility:CreateModule({
         end
 
         if callback then
-            local humanoid = entitylib.character.Humanoid
-            local jumpAnim = humanoid:LoadAnimation(humanoid.JumpAnimation)
-            local fallAnim = humanoid:LoadAnimation(humanoid.FallAnimation)
-            
             local towerThread
             
             -- Fast tower building with CPS
@@ -4232,23 +4228,6 @@ Scaffold = vape.Categories.Utility:CreateModule({
                                     -- Only apply velocity if we have blocks or LimitItem is off
                                     if (wool or not LimitItem.Enabled) and not bedwars.AppController:isLayerOpen(bedwars.UILayers.MAIN) then
                                         root.Velocity = Vector3.new(root.Velocity.X, 38, root.Velocity.Z)
-                                        
-                                        -- Play animations based on vertical velocity
-                                        if root.Velocity.Y > 0 then
-                                            if not jumpAnim.IsPlaying then
-                                                jumpAnim:Play()
-                                            end
-                                            if fallAnim.IsPlaying then
-                                                fallAnim:Stop()
-                                            end
-                                        elseif root.Velocity.Y < 0 then
-                                            if not fallAnim.IsPlaying then
-                                                fallAnim:Play()
-                                            end
-                                            if jumpAnim.IsPlaying then
-                                                jumpAnim:Stop()
-                                            end
-                                        end
                                     end
                                     
                                     -- Place blocks if we have them
@@ -4283,9 +4262,6 @@ Scaffold = vape.Categories.Utility:CreateModule({
                     task.cancel(towerThread)
                     towerThread = nil
                 end
-                -- Stop animations when tower stops
-                jumpAnim:Stop()
-                fallAnim:Stop()
             end
             
             -- Input handlers for tower
@@ -4428,7 +4404,6 @@ TowerCPS = Scaffold:CreateTwoSlider({
     DefaultMax = 20,
     Darker = true
 })
-
 	
 run(function()
 	local StaffDetector
