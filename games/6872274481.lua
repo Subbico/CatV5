@@ -4215,9 +4215,11 @@ Scaffold = vape.Categories.Utility:CreateModule({
             pcall(function()
                 if humanoid.JumpAnimation then
                     jumpAnim = humanoid:LoadAnimation(humanoid.JumpAnimation)
+                    jumpAnim.Looped = true
                 end
                 if humanoid.FallAnimation then
                     fallAnim = humanoid:LoadAnimation(humanoid.FallAnimation)
+                    fallAnim.Looped = true
                 end
             end)
             
