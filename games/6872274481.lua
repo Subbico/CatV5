@@ -4226,13 +4226,7 @@ Scaffold = vape.Categories.Utility:CreateModule({
         end
 
         if callback then
-            -- Load custom animations
             local jumpAnim, fallAnim
-            if entitylib.isAlive and entitylib.character.Humanoid then
-                jumpAnim = entitylib.character.Humanoid:LoadAnimation(workspace.Animate.jump)
-                fallAnim = entitylib.character.Humanoid:LoadAnimation(workspace.Animate.fall)
-            end
-
             local towerThread
 
             -- Fast tower building with CPS
@@ -4322,6 +4316,13 @@ Scaffold = vape.Categories.Utility:CreateModule({
                         end
                     end
                 end)
+            end
+
+            -- Load custom animations
+            local jumpAnim, fallAnim
+            if entitylib.isAlive and entitylib.character.Humanoid then
+                jumpAnim = entitylib.character.Humanoid:LoadAnimation(workspace.Animate.jump)
+                fallAnim = entitylib.character.Humanoid:LoadAnimation(workspace.Animate.fall)
             end
 
             -- Main scaffold loop
@@ -4451,38 +4452,6 @@ TowerCPS = Scaffold:CreateTwoSlider({
     DefaultMax = 20,
     Darker = true
 })
-	
-run(function()
-	local ShopTierBypass
-	local tiered, nexttier = {}, {}
-	
-	ShopTierBypass = vape.Categories.Utility:CreateModule({
-		Name = 'Shop Tier Bypass',
-		Function = function(callback)
-			if callback then
-				repeat task.wait() until store.shopLoaded or not ShopTierBypass.Enabled
-				if ShopTierBypass.Enabled then
-					for _, v in bedwars.Shop.ShopItems do
-						tiered[v] = v.tiered
-						nexttier[v] = v.nextTier
-						v.nextTier = nil
-						v.tiered = nil
-					end
-				end
-			else
-				for i, v in tiered do
-					i.tiered = v
-				end
-				for i, v in nexttier do
-					i.nextTier = v
-				end
-				table.clear(nexttier)
-				table.clear(tiered)
-			end
-		end,
-		Tooltip = 'Lets you buy things like armor early.'
-	})
-end)
 	
 run(function()
 	local StaffDetector
